@@ -9,7 +9,7 @@ Which jobs count as worth Sarthak's attention. Implemented in
 | Dimension | Target |
 |---|---|
 | Level | Product Designer / Senior Product Designer and close equivalents (UX Designer, UI Designer, UX/UI Designer) |
-| Experience | 3–5 years; roles asking 3+, 4+ or 5+ are a fit |
+| Experience | 3–5 years; roles asking 3+, 4+ or 5+ are a fit, 6+ is hard rejected |
 | Locations | Bangalore, Gurgaon, Remote, Hyderabad — **in that priority order** |
 | Companies | Only the target list; the crawler never looks anywhere else |
 

@@ -110,8 +110,9 @@ export type CompanyMatchOverrides = {
 };
 
 /**
- * Target configuration: Product Designer / Senior Product Designer, 3-5 years of experience,
- * and four acceptable locations ranked Bangalore > Gurgaon > Remote > Hyderabad.
+ * Target configuration: Product Designer / Senior Product Designer, 3-5 years of experience
+ * (6+ hard rejected), and four acceptable locations ranked Bangalore > Gurgaon > Remote >
+ * Hyderabad.
  */
 export const DEFAULT_MATCH_RULES: MatchRules = {
   title: {
@@ -172,11 +173,11 @@ export const DEFAULT_MATCH_RULES: MatchRules = {
     ],
   },
   experience: {
-    // 3-5 years of product design experience.
+    // 3-5 years, ideal band. 6+ is hard rejected outright, not penalized.
     idealMinYears: 3,
     idealMaxYears: 5,
     underLevelPenalty: 8,
-    hardRejectYears: 8,
+    hardRejectYears: 6,
     penaltyPerYear: 10,
     unknownPasses: true,
   },

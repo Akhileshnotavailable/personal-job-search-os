@@ -213,8 +213,8 @@ export default async function SettingsPage() {
 
           <dt className="text-ink-dim">Experience</dt>
           <dd className="text-ink">
-            up to {rules?.experience.idealMaxYears ?? 4} years, rejected at{" "}
-            {rules?.experience.hardRejectYears ?? 7}+
+            up to {rules?.experience.idealMaxYears ?? 5} years, rejected at{" "}
+            {rules?.experience.hardRejectYears ?? 6}+
           </dd>
 
           <dt className="text-ink-dim">Patterns</dt>

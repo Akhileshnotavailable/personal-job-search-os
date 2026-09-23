@@ -193,15 +193,14 @@ describe("matchJob", () => {
     expect(r.requiredYears).toBe(9);
   });
 
-  it("keeps a slightly-over role, with a penalty rather than a rejection", () => {
+  it("rejects a role right at the 6-year hard cutoff, not just above it", () => {
     const r = matchJob({
       title: "Product Designer",
       location: BLR,
       description: "6+ years of experience.",
     });
-    expect(r.isRelevant).toBe(true);
-    expect(r.score).toBe(130); // 140 - 10 for one year over
-    expect(r.reason).toContain("above target");
+    expect(r.isRelevant).toBe(false);
+    expect(r.reason).toMatch(/reject threshold/);
   });
 
   it("keeps a job whose description states no experience requirement", () => {
@@ -358,9 +357,9 @@ describe("company match overrides", () => {
 });
 
 describe("years-of-experience band", () => {
-  // 3-5 years is the eligible band. The band is a ranking signal at both ends and a gate only
-  // at the extreme: a role out of reach is worth hiding, a role below the band is only worth
-  // ranking down.
+  // 3-5 years is the eligible band, a ranking signal at the low end and a gate only at the
+  // extreme: a role below the band is only worth ranking down. 6+ is a hard gate, not a soft
+  // penalty -- there is no tolerated-but-deprioritised tier above 5.
   const job = (description: string) => ({
     title: "Product Designer",
     location: "Bengaluru, India",
@@ -380,11 +379,10 @@ describe("years-of-experience band", () => {
     expect(under.reason).toMatch(/below the 3-5 band/);
   });
 
-  it("penalises above the band proportionally", () => {
-    const six = matchJob(job("6+ years of experience."));
-    const seven = matchJob(job("7+ years of experience."));
-    expect(seven.score).toBeLessThan(six.score);
-    expect(six.reason).toContain("above target");
+  it("hard-rejects at the 6-year cutoff, not just above it", () => {
+    const m = matchJob(job("6+ years of experience required."));
+    expect(m.isRelevant).toBe(false);
+    expect(m.reason).toMatch(/reject threshold/);
   });
 
   it("still hard-rejects the genuinely out-of-reach", () => {
