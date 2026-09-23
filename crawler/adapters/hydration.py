@@ -42,9 +42,12 @@ from crawler.normalization.text import html_to_text
 
 REQUIRED_FIELDS = ("external_job_id", "title", "job_url")
 
-# window.__NUXT__ = {...};  /  window.__INITIAL_STATE__ = {...}
+# window.__NUXT__ = {...};  /  window.__INITIAL_STATE__ = {...}  /  window.__remixContext = {...};
+# Most frameworks shout the name in caps with a trailing "__", but Remix's default is
+# __remixContext -- mixed case, no trailing "__". Both conventions share only the leading "__",
+# so that is all this requires.
 _ASSIGNMENT = re.compile(
-    r"window\.(?P<name>__[A-Z_]+__)\s*=\s*(?P<json>[\[{].*?)(?:;\s*(?:</script>|window\.|\Z))",
+    r"window\.(?P<name>__[A-Za-z_]+)\s*=\s*(?P<json>[\[{].*?)(?:;\s*(?:</script>|window\.|\Z))",
     re.S,
 )
 
