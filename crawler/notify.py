@@ -95,13 +95,13 @@ SUBJECT_BUDGET = 90
 
 
 def _subject(count: int, company_names: list[str]) -> str:
-    """`[APPLY] - Adobe, NVIDIA, Sarvam AI · 8 new SDE-2 roles`
+    """`[APPLY] - Adobe, Swiggy, Razorpay · 8 new design roles`
 
     Company names lead because that is what makes the email worth opening: "Adobe is hiring" is
     a decision, "8 new matches" is a statistic. They are ordered by best match, so the most
     interesting name survives truncation.
     """
-    tail = f" · {count} new SDE-2 role{'s' if count != 1 else ''}"
+    tail = f" · {count} new design role{'s' if count != 1 else ''}"
     prefix = "[APPLY] - "
     room = SUBJECT_BUDGET - len(prefix) - len(tail)
 
@@ -167,7 +167,7 @@ def build_digest(notifications: list[dict[str, Any]]) -> tuple[str, str, str]:
         f"<h2 style='margin:0 0 4px'>{count} new matching role"
         f"{'s' if count != 1 else ''}</h2>",
         "<p style='margin:0 0 20px;color:#666;font-size:14px'>"
-        "SDE-2 level, in Bangalore, Gurgaon, Remote or Hyderabad.</p>",
+        "Product Designer level, in Bangalore, Gurgaon, Remote or Hyderabad.</p>",
     ]
     for company, items in companies:
         parts.append(

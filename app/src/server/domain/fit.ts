@@ -1,5 +1,5 @@
 /**
- * Fit scoring: how well a posting matches *Sarthak specifically*, on a 0-100 scale.
+ * Fit scoring: how well a posting matches *the candidate specifically*, on a 0-100 scale.
  *
  * This is deliberately a separate question from `matching.ts`, which answers "should this job be
  * on the board at all" -- a hard gate on level, location and exclusions. Fit answers "of the jobs
@@ -76,67 +76,61 @@ export type FitProfile = {
 };
 
 /**
- * Sarthak's profile, from his resume: Uber SWE II on DataBook (metadata, lineage, sharding a 13TB
- * datastore), Blinkit SDE before that (pricing, layout services, Kafka, Redis, DynamoDB), ~3.1
- * years, Golang and Python, backend and distributed systems.
+ * The candidate's profile, from their resume: Product Designer with 3+ years across B2B and
+ * consumer startups — Senior Product Designer at WizCommerce (discount engine, CRM), founding
+ * designer at SuperFam (consumer family app, design system from scratch), Product Designer at
+ * Khatabook (B2B partner dashboard, tokenized design system), co-founder/designer at a D2C
+ * Shopify brand. Core strengths: design systems, prototyping, and user research end-to-end.
  */
 export const DEFAULT_FIT_PROFILE: FitProfile = {
   level: {
     exact: [
-      "\\bsde\\s*-?\\s*(?:2|ii)\\b",
-      "\\bswe\\s*-?\\s*(?:2|ii)\\b",
-      "\\bsoftware\\s+(?:development\\s+)?engineer\\s*-?\\s*(?:2|ii)\\b",
-      "\\bengineer\\s*(?:2|ii)\\b",
-      "\\bsoftware\\s+engineer\\s+level\\s*2\\b",
-      "\\bmember\\s+of\\s+technical\\s+staff\\s*(?:2|ii)\\b",
+      "\\bproduct\\s+designer\\b",
+      "\\bsenior\\s+product\\s+designer\\b",
     ],
     adjacent: [
-      "\\bsoftware\\s+engineer\\b",
-      "\\bbackend\\s+engineer\\b",
-      "\\bback[\\s-]?end\\s+(?:software\\s+)?engineer\\b",
-      "\\bfull[\\s-]?stack\\s+(?:software\\s+)?engineer\\b",
-      "\\bsoftware\\s+development\\s+engineer\\b",
-      "\\bplatform\\s+engineer\\b",
-      "\\bapplication\\s+engineer\\b",
-      "\\bproduct\\s+engineer\\b",
+      "\\bux\\s*\\/?\\s*ui\\s+designer\\b",
+      "\\bux\\s+designer\\b",
+      "\\bui\\s+designer\\b",
+      "\\buser\\s+experience\\s+designer\\b",
+      "\\buser\\s+interface\\s+designer\\b",
+      "\\binteraction\\s+designer\\b",
+      "\\bexperience\\s+designer\\b",
+      "\\bvisual\\s+designer\\b",
     ],
     below: [
-      "\\bsde\\s*-?\\s*(?:1|i)\\b",
-      "\\bswe\\s*-?\\s*(?:1|i)\\b",
-      "\\bengineer\\s*(?:1|i)\\b",
-      "\\bassociate\\s+(?:software\\s+)?engineer\\b",
-      "\\bgraduate\\b",
+      "\\bjunior\\s+product\\s+designer\\b",
+      "\\bassociate\\s+product\\s+designer\\b",
+      "\\bdesign\\s+intern\\b",
       "\\bnew\\s+grad\\b",
+      "\\bgraduate\\b",
     ],
   },
 
-  // Ordered by how central each is to his actual work. A job needs only a few of these; the
-  // scoring takes the best-scoring groups rather than summing everything, so a description that
-  // lists thirty technologies cannot outrank one that matches his core three.
+  // Ordered by how central each is to the actual work shipped. A job needs only a few of these;
+  // the scoring takes the best-scoring groups rather than summing everything, so a description
+  // that lists a dozen buzzwords cannot outrank one that matches the core strengths.
   skills: [
-    { name: "Golang", weight: 10, patterns: ["\\bgo(?:lang)?\\b", "\\bgorm\\b"] },
-    { name: "Distributed systems", weight: 9, patterns: ["\\bdistributed\\s+systems?\\b", "\\bscalab(?:le|ility)\\b", "\\bhigh[\\s-]?(?:throughput|scale|availability)\\b", "\\bsharding\\b", "\\bhorizontal(?:ly)?\\s+scal"] },
-    { name: "Backend", weight: 8, patterns: ["\\bback[\\s-]?end\\b", "\\bserver[\\s-]?side\\b", "\\bapi\\s+(?:design|development)\\b", "\\brest(?:ful)?\\s+api", "\\bgrpc\\b"] },
-    { name: "Microservices", weight: 7, patterns: ["\\bmicro[\\s-]?services?\\b", "\\bservice[\\s-]?oriented\\b"] },
-    { name: "Python", weight: 7, patterns: ["\\bpython\\b", "\\bdjango\\b", "\\bcelery\\b"] },
-    { name: "Data infrastructure", weight: 7, patterns: ["\\bdata\\s+(?:platform|infrastructure|pipeline|engineering)\\b", "\\bmetadata\\b", "\\blineage\\b", "\\bdata\\s+governance\\b", "\\btrino\\b", "\\bspark\\b"] },
-    { name: "Kafka / streaming", weight: 6, patterns: ["\\bkafka\\b", "\\b(?:event|message)\\s+(?:streaming|driven|queue)\\b", "\\bpub[\\s-]?sub\\b", "\\bsqs\\b"] },
-    { name: "Databases", weight: 6, patterns: ["\\bpostgres(?:ql)?\\b", "\\bmysql\\b", "\\bdynamodb\\b", "\\bmongo(?:db)?\\b", "\\brelational\\s+database", "\\bsql\\b"] },
-    { name: "Caching", weight: 5, patterns: ["\\bredis\\b", "\\bmemcach", "\\bcaching\\b"] },
-    { name: "Kubernetes / cloud", weight: 5, patterns: ["\\bkubernetes\\b", "\\bk8s\\b", "\\bdocker\\b", "\\baws\\b", "\\blambda\\b", "\\bterraform\\b"] },
-    { name: "Observability", weight: 4, patterns: ["\\bprometheus\\b", "\\bgrafana\\b", "\\bdatadog\\b", "\\bobservability\\b", "\\bopentelemetry\\b", "\\bmonitoring\\b"] },
-    { name: "TypeScript / React", weight: 4, patterns: ["\\btypescript\\b", "\\breact(?:\\.js)?\\b", "\\bnext\\.?js\\b", "\\bnode(?:\\.js)?\\b"] },
-    { name: "C++", weight: 3, patterns: ["\\bc\\+\\+\\b"] },
+    { name: "Design systems", weight: 10, patterns: ["\\bdesign\\s+systems?\\b", "\\bdesign\\s+tokens?\\b", "\\bcomponent\\s+librar", "\\btokeniz"] },
+    { name: "Figma / prototyping", weight: 9, patterns: ["\\bfigma\\b", "\\bprototyp", "\\bframer\\b", "\\bhigh[\\s-]?fidelity\\b", "\\bwireframe"] },
+    { name: "User research", weight: 8, patterns: ["\\buser\\s+research\\b", "\\busability\\s+testing\\b", "\\bqualitative\\s+research\\b", "\\buser\\s+interviews?\\b", "\\bdiscovery\\b"] },
+    { name: "Interaction design", weight: 7, patterns: ["\\binteraction\\s+design\\b", "\\buser\\s+flows?\\b", "\\bmicro[\\s-]?interactions?\\b"] },
+    { name: "Information architecture", weight: 6, patterns: ["\\binformation\\s+architecture\\b", "\\bnavigation\\s+design\\b", "\\btaxonom"] },
+    { name: "Data-informed design", weight: 5, patterns: ["\\bdata[\\s-]?informed\\b", "\\bmixpanel\\b", "\\bgoogle\\s+analytics\\b", "\\ba\\/b\\s+test", "\\bproduct\\s+analytics\\b"] },
+    { name: "Accessibility", weight: 4, patterns: ["\\baccessibilit", "\\bwcag\\b", "\\bhuman\\s+interface\\s+guidelines\\b", "\\bmaterial\\s+design\\b", "\\ba11y\\b"] },
+    { name: "Cross-functional collaboration", weight: 4, patterns: ["\\bcross[\\s-]?functional\\b", "\\bpartner(?:ing|s)?\\s+with\\s+(?:engineer|product|pm)", "\\bworking\\s+closely\\s+with\\s+engineer"] },
+    { name: "Visual design", weight: 3, patterns: ["\\bvisual\\s+design\\b", "\\badobe\\s+(?:creative\\s+suite|photoshop|illustrator|xd)\\b", "\\bbrand\\s+identity\\b"] },
+    { name: "Mobile (iOS/Android)", weight: 3, patterns: ["\\bios\\b", "\\bandroid\\b", "\\bnative\\s+app\\b", "\\bmobile\\s+app\\b"] },
   ],
 
-  // Where he has actually shipped. A posting in a domain he knows is a materially stronger ask
-  // for a referral than one that merely uses the same tools.
+  // Where the candidate has actually shipped. A posting in a domain they know is a materially
+  // stronger ask for a referral than one that merely uses the same tools.
   domains: [
-    { name: "Data platform", weight: 10, patterns: ["\\bdata\\s+(?:platform|catalog|governance|discovery|quality)\\b", "\\bmetadata\\b", "\\blineage\\b", "\\bdata\\s+mesh\\b"] },
-    { name: "Developer platform", weight: 8, patterns: ["\\bdeveloper\\s+(?:platform|experience|tools?|productivity)\\b", "\\binternal\\s+(?:tools?|platform)\\b", "\\bplatform\\s+engineering\\b", "\\binfrastructure\\b"] },
-    { name: "Pricing / commerce", weight: 8, patterns: ["\\bpricing\\b", "\\be[\\s-]?commerce\\b", "\\bmarketplace\\b", "\\bcheckout\\b", "\\bcatalog(?:ue)?\\b", "\\bmerchandis", "\\bquick\\s+commerce\\b", "\\bretail\\b"] },
-    { name: "Fintech / payments", weight: 6, patterns: ["\\bpayments?\\b", "\\bfintech\\b", "\\blending\\b", "\\bbanking\\b", "\\btransactions?\\s+processing\\b"] },
-    { name: "Search / ranking", weight: 5, patterns: ["\\bsearch\\b", "\\branking\\b", "\\brecommendations?\\b", "\\bpersonaliz"] },
+    { name: "B2B SaaS / merchant tools", weight: 10, patterns: ["\\bb2b\\b", "\\bmerchant\\b", "\\bpartner\\s+portal\\b", "\\bcrm\\b", "\\bsaas\\b", "\\bdashboard\\b", "\\benterprise\\b"] },
+    { name: "Fintech / commerce", weight: 8, patterns: ["\\bfintech\\b", "\\bbookkeeping\\b", "\\bpayments?\\b", "\\binvoic", "\\bpricing\\b", "\\bcheckout\\b", "\\be[\\s-]?commerce\\b"] },
+    { name: "Consumer mobile", weight: 7, patterns: ["\\bconsumer\\s+app\\b", "\\bfamily\\b", "\\bios\\s+and\\s+android\\b", "\\bconsumer\\s+product\\b"] },
+    { name: "0-to-1 / startup", weight: 6, patterns: ["\\b0[\\s-]?to[\\s-]?1\\b", "\\bfounding\\b", "\\bearly[\\s-]?stage\\b", "\\bstartup\\b", "\\byc[\\s-]?backed\\b"] },
+    { name: "D2C / retail", weight: 5, patterns: ["\\bd2c\\b", "\\bretail\\b", "\\bshopify\\b", "\\bfashion\\b"] },
   ],
 
   // Skills carry the most weight on purpose. Level, location and freshness are all readable
@@ -180,7 +174,7 @@ function hitGroups(text: string, groups: SkillGroup[]): SkillGroup[] {
  *
  * A 7,000-character Salesforce description mentions far more technologies than a terse one, and
  * summing would rank verbosity rather than fit. Capping at the top few asks the question that
- * actually matters: does this job centre on the things he is strongest at?
+ * actually matters: does this job centre on the things the candidate is strongest at?
  */
 function topWeight(groups: SkillGroup[], n: number): number {
   return groups.slice(0, n).reduce((sum, g) => sum + g.weight, 0);
@@ -206,12 +200,15 @@ export function scoreFit(
     available += w;
     let fraction: number;
     let detail: string;
-    if (anyMatch(title, profile.level.exact)) {
-      fraction = 1;
-      detail = "Title names the SDE-2 / SWE-II band exactly";
-    } else if (anyMatch(title, profile.level.below)) {
+    // Checked before `exact`: a junior/associate qualifier is a substring match against the
+    // exact patterns too ("Associate Product Designer" contains "Product Designer"), so the more
+    // specific signal has to win first or the qualifier is never seen.
+    if (anyMatch(title, profile.level.below)) {
       fraction = 0.35;
-      detail = "Reads as one level below his current band";
+      detail = "Reads as one level below the target band";
+    } else if (anyMatch(title, profile.level.exact)) {
+      fraction = 1;
+      detail = "Title names the Product Designer band exactly";
     } else if (anyMatch(title, profile.level.adjacent)) {
       fraction = 0.72;
       detail = "Right altitude, but the level is not stated";
@@ -246,8 +243,8 @@ export function scoreFit(
       dimension: "skills",
       points: Math.round(points),
       detail: hits.length
-        ? `Matches ${hits.length} of his skill areas${titleOnly ? ", from the title alone" : ""}`
-        : "None of his core technologies appear",
+        ? `Matches ${hits.length} of the candidate's skill areas${titleOnly ? ", from the title alone" : ""}`
+        : "None of the core skills appear",
     });
   }
 
@@ -266,7 +263,7 @@ export function scoreFit(
         label: hits.slice(0, 2).map((h) => h.name).join(" · "),
         dimension: "domain",
         points: Math.round(points),
-        detail: `Overlaps work he has shipped${titleOnly ? ", inferred from the title" : ""}`,
+        detail: `Overlaps work the candidate has shipped${titleOnly ? ", inferred from the title" : ""}`,
       });
     }
   }

@@ -5,7 +5,7 @@ from crawler.notify import SUBJECT_BUDGET, _subject
 
 def test_leads_with_company_names():
     s = _subject(3, ["Adobe", "NVIDIA", "Sarvam AI"])
-    assert s == "[APPLY] - Adobe, NVIDIA, Sarvam AI · 3 new SDE-2 roles"
+    assert s == "[APPLY] - Adobe, NVIDIA, Sarvam AI · 3 new design roles"
 
 
 def test_always_carries_the_apply_prefix():
@@ -13,7 +13,7 @@ def test_always_carries_the_apply_prefix():
 
 
 def test_singular_when_one_role():
-    assert _subject(1, ["Adobe"]).endswith("1 new SDE-2 role")
+    assert _subject(1, ["Adobe"]).endswith("1 new design role")
 
 
 def test_truncates_long_company_lists_but_keeps_the_first():
@@ -33,4 +33,4 @@ def test_stays_within_budget_even_for_one_very_long_name():
 def test_reports_the_true_count_not_the_number_shown():
     names = [f"Company{i}" for i in range(12)]
     s = _subject(40, names)
-    assert "40 new SDE-2 roles" in s
+    assert "40 new design roles" in s

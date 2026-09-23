@@ -238,7 +238,7 @@ export default async function DashboardPage() {
         {top.length === 0 ? (
           <EmptyState
             title="No matching roles yet"
-            body="The crawler runs every six hours and will surface SDE-2 roles in Bangalore, Gurgaon, Remote or Hyderabad as they appear."
+            body="The crawler runs every six hours and will surface Product Designer roles in Bangalore, Gurgaon, Remote or Hyderabad as they appear."
             hint={<code className="text-ink-dim">python -m crawler.main</code>}
           />
         ) : (

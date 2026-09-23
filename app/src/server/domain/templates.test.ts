@@ -142,10 +142,10 @@ describe("default templates", () => {
     const values = {
       name: "Chintan",
       company: "Databricks",
-      role: "Software Engineer II",
+      role: "Product Designer",
       job_link: "https://example.com/job",
       resume_link: "https://example.com/cv",
-      your_name: "Sarthak",
+      your_name: "Akhilesh",
     };
     for (const t of DEFAULT_TEMPLATES) {
       expect(missingVariables(t.body, values)).toEqual([]);

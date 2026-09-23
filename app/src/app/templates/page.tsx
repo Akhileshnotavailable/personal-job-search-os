@@ -55,7 +55,7 @@ export default async function TemplatesPage({
 
   const defaults: Record<string, string> = {
     resume_link: settingsRows[0]?.resumeUrl ?? "",
-    your_name: "Sarthak",
+    your_name: "Akhilesh",
     ...(job
       ? { role: job.title, company: job.companyName, job_link: job.jobUrl }
       : {}),

@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "job-search-os",
+  "name": "job-search",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-05",
   // Required by the OpenNext Cloudflare adapter.
@@ -16,7 +16,7 @@
       "binding": "DB",
       "database_name": "job-search-os",
       // Populated by `npx wrangler d1 create job-search-os`. See docs/infrastructure.md.
-      "database_id": "d958129c-4ed8-4440-adc0-be0e409462fa",
+      "database_id": "2b7d17c9-dfe3-4988-ae5f-7368eacf056a",
       "migrations_dir": "src/db/migrations"
     }
   ],

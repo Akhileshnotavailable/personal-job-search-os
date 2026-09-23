@@ -2,9 +2,9 @@
 
 A private, single-user job search and interview preparation tool.
 
-Discovers relevant SDE-2 / SWE-2 openings at target companies as early as possible, surfaces the
-referral contacts who can help, generates the outreach message, and tracks the application through
-to interviews — in one place, on free infrastructure.
+Discovers relevant Product Designer / Senior Product Designer openings at target companies as early
+as possible, surfaces the referral contacts who can help, generates the outreach message, and
+tracks the application through to interviews — in one place, on free infrastructure.
 
 ## Status
 

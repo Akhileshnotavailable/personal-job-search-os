@@ -11,7 +11,7 @@ import {
 function job(overrides: Partial<IncomingJob> = {}): IncomingJob {
   return {
     externalJobId: "R-1",
-    title: "Software Engineer II",
+    title: "Product Designer",
     jobUrl: "https://x.com/j/1",
     normalizedJobUrl: "https://x.com/j/1",
     location: "Bengaluru, India",

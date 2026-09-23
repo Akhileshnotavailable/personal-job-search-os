@@ -32,7 +32,7 @@ export async function GET(
     templates: templates.map((t) => ({ id: t.id, name: t.name, body: t.body })),
     defaults: {
       resume_link: settingsRows[0]?.resumeUrl ?? "",
-      your_name: "Sarthak",
+      your_name: "Akhilesh",
     },
   });
 }

@@ -197,7 +197,7 @@ export default async function SettingsPage() {
         <SectionTitle>Active match rules</SectionTitle>
         <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[13px]">
           <dt className="text-ink-dim">Target level</dt>
-          <dd className="text-ink">SDE-2 / SWE-2 and equivalents, including L4 and MTS-II</dd>
+          <dd className="text-ink">Product Designer / Senior Product Designer and close equivalents (UX/UI Designer)</dd>
 
           <dt className="text-ink-dim">Locations</dt>
           <dd className="flex flex-wrap gap-1.5">

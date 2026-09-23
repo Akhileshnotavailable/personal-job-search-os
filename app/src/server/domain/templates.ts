@@ -143,18 +143,20 @@ export const DEFAULT_TEMPLATES: { name: string; body: string }[] = [
     name: "Senior / professional connection",
     body:
       "Hi {{name}},\n\nI hope you're well. I came across the {{role}} role at {{company}} and it " +
-      "lines up closely with what I've been building — backend and distributed systems work in " +
-      "Go and Python.\n\n{{job_link}}\n\nIf you think I'd be a reasonable fit, I'd be grateful " +
-      "for a referral. My resume is here: {{resume_link}}\n\nEither way, good to be in touch.\n\n" +
+      "lines up closely with what I've been building — end-to-end product design across " +
+      "design systems, prototyping and user research at B2B and consumer startups.\n\n" +
+      "{{job_link}}\n\nIf you think I'd be a reasonable fit, I'd be grateful for a referral. " +
+      "My resume is here: {{resume_link}}\n\nEither way, good to be in touch.\n\n" +
       "Best,\n{{your_name}}",
   },
   {
     name: "Email referral request",
     body:
       "Subject: Referral request — {{role}} at {{company}}\n\nHi {{name}},\n\nI'm reaching out " +
-      "about the {{role}} position at {{company}}: {{job_link}}\n\nI have around four years of " +
-      "backend experience, most recently at Uber, working on high-throughput services and " +
-      "distributed systems in Go and Python. The role looks like a strong match.\n\nMy resume: " +
+      "about the {{role}} position at {{company}}: {{job_link}}\n\nI have 3+ years of product " +
+      "design experience, most recently as a Senior Product Designer at WizCommerce, owning " +
+      "design end-to-end from user research through design systems to shipped UI across B2B " +
+      "and consumer products. The role looks like a strong match.\n\nMy resume: " +
       "{{resume_link}}\n\nWould you be willing to refer me? Thanks either way — I appreciate " +
       "your time.\n\nBest regards,\n{{your_name}}",
   },

@@ -4,12 +4,12 @@ Which jobs count as worth Sarthak's attention. Implemented in
 [`app/src/server/domain/matching.ts`](../app/src/server/domain/matching.ts), configured by
 `settings.match_rules`.
 
-## What Sarthak is looking for
+## What we're looking for
 
 | Dimension | Target |
 |---|---|
-| Level | SDE-2 / SWE-2 / Software Engineer II and equivalents (including Google's L4) |
-| Experience | 3–4 years; roles asking 3+ or 4+ are a fit |
+| Level | Product Designer / Senior Product Designer and close equivalents (UX Designer, UI Designer, UX/UI Designer) |
+| Experience | 3–5 years; roles asking 3+, 4+ or 5+ are a fit |
 | Locations | Bangalore, Gurgaon, Remote, Hyderabad — **in that priority order** |
 | Companies | Only the target list; the crawler never looks anywhere else |
 

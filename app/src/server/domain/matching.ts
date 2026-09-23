@@ -110,97 +110,73 @@ export type CompanyMatchOverrides = {
 };
 
 /**
- * Sarthak's configuration: SDE-2 level, 3-4 years of experience, and four acceptable locations
- * ranked Bangalore > Gurgaon > Remote > Hyderabad.
+ * Target configuration: Product Designer / Senior Product Designer, 3-5 years of experience,
+ * and four acceptable locations ranked Bangalore > Gurgaon > Remote > Hyderabad.
  */
 export const DEFAULT_MATCH_RULES: MatchRules = {
   title: {
     include: [
-      // Explicit level-2 titles -- the strongest signal.
-      { pattern: "software\\s+(development\\s+)?engineer\\s*(-|–)?\\s*(ii|2)\\b", score: 100, label: "Software Engineer II" },
-      { pattern: "\\bsde\\s*(-|–)?\\s*(ii|2)\\b", score: 100, label: "SDE 2" },
-      { pattern: "\\bswe\\s*(-|–)?\\s*(ii|2)\\b", score: 100, label: "SWE 2" },
-      { pattern: "\\bengineer\\s*(-|–)?\\s*(ii|2)\\b", score: 90, label: "Engineer II" },
-      { pattern: "\\bdeveloper\\s*(-|–)?\\s*(ii|2)\\b", score: 90, label: "Developer II" },
-      // Company-specific level codes. Google uses L4 for SDE-2 equivalent; Meta uses E4.
-      { pattern: "\\bl4\\b", score: 90, label: "L4 (Google SDE-2 equivalent)" },
-      { pattern: "\\be4\\b", score: 85, label: "E4 (Meta SDE-2 equivalent)" },
-      { pattern: "\\blevel\\s*4\\b", score: 85, label: "Level 4" },
-      { pattern: "member\\s+of\\s+technical\\s+staff\\s*(-|–)?\\s*(ii|2)\\b", score: 90, label: "MTS 2" },
-      { pattern: "\\bmts\\s*(-|–)?\\s*(ii|2)\\b", score: 90, label: "MTS 2" },
-      // Unlevelled engineering titles. Common at startups and on Greenhouse/Lever boards,
-      // where seniority lives in the description rather than the title.
-      // Unanchored on purpose. Real postings almost always carry a qualifier -- "Software
-      // Engineer, Linux Graphics", "System Software Engineer, Workflow Platform" -- and an
-      // anchored ^...$ pattern silently rejected 194 of 1334 live postings during validation.
-      { pattern: "\\bsoftware\\s+engineer\\b", score: 65, label: "Software Engineer (unlevelled)" },
-      { pattern: "\\bbackend\\s+(software\\s+)?(engineer|developer)\\b", score: 65, label: "Backend Engineer" },
-      { pattern: "\\bback[-\\s]?end\\s+(engineer|developer)\\b", score: 65, label: "Backend Engineer" },
-      { pattern: "\\bfull[-\\s]?stack\\s+(engineer|developer)\\b", score: 60, label: "Full Stack Engineer" },
-      { pattern: "\\b(platform|infrastructure|distributed\\s+systems)\\s+engineer\\b", score: 60, label: "Platform / Infra Engineer" },
-      { pattern: "\\bmember\\s+of\\s+technical\\s+staff\\b", score: 60, label: "Member of Technical Staff" },
-      { pattern: "\\bsoftware\\s+developer\\b", score: 60, label: "Software Developer" },
+      // Explicit target titles -- the strongest signal. Senior is a target level here, not an
+      // exclusion, since the ask covers both Product Designer and Senior Product Designer.
+      { pattern: "\\bsenior\\s+product\\s+designer\\b", score: 100, label: "Senior Product Designer" },
+      { pattern: "\\bproduct\\s+designer\\b", score: 100, label: "Product Designer" },
+      { pattern: "\\bsenior\\s+ux\\s*\\/?\\s*ui\\s+designer\\b", score: 95, label: "Senior UX/UI Designer" },
+      { pattern: "\\bux\\s*\\/?\\s*ui\\s+designer\\b", score: 90, label: "UX/UI Designer" },
+      { pattern: "\\bsenior\\s+ux\\s+designer\\b", score: 90, label: "Senior UX Designer" },
+      { pattern: "\\bsenior\\s+ui\\s+designer\\b", score: 90, label: "Senior UI Designer" },
+      { pattern: "\\bux\\s+designer\\b", score: 85, label: "UX Designer" },
+      { pattern: "\\bui\\s+designer\\b", score: 85, label: "UI Designer" },
+      { pattern: "\\buser\\s+experience\\s+designer\\b", score: 85, label: "User Experience Designer" },
+      { pattern: "\\buser\\s+interface\\s+designer\\b", score: 85, label: "User Interface Designer" },
+      { pattern: "\\binteraction\\s+designer\\b", score: 80, label: "Interaction Designer" },
+      { pattern: "\\bexperience\\s+designer\\b", score: 75, label: "Experience Designer" },
+      { pattern: "\\bservice\\s+designer\\b", score: 70, label: "Service Designer" },
+      { pattern: "\\bvisual\\s+designer\\b", score: 65, label: "Visual Designer" },
+      { pattern: "\\bproduct\\s+design\\b", score: 65, label: "Product Design (role area)" },
+      // Unlevelled fallback. Discipline exclusions run before this, so a generic "Designer"
+      // title only reaches here once graphic/game/web/etc. designers have already been dropped.
+      { pattern: "\\bdesigner\\b", score: 55, label: "Designer (unlevelled)" },
     ],
     // Level exclusions. These are the ones a company override can lift, because ladders are not
-    // comparable across companies: "Senior Software Engineer" is Sarthak's level at Confluent
-    // while "Software Engineer III" is the equivalent at Google. Everything in `exclude` below
-    // is about the *discipline* and is never lifted.
+    // comparable across companies -- "Design Lead" is an IC ceiling at some startups and a
+    // people-management title at others. Everything in `exclude` below is about the *discipline*
+    // and is never lifted.
     seniorityExclude: [
-      // More senior than target.
-      "\\bsenior\\b", "\\bsr\\.?\\b",
-      // "Staff Engineer" is too senior, but "Member of Technical Staff" is the SDE-2 title at
-      // several companies -- so exclude "staff" except where "technical" precedes it.
-      "(?<!technical\\s)\\bstaff\\b",
-      "\\bprincipal\\b", "\\blead\\b",
-      "\\barchitect\\b", "\\bdistinguished\\b", "\\bfellow\\b", "\\bdirector\\b",
-      "\\bmanager\\b", "\\bhead\\s+of\\b", "\\bvp\\b", "\\bvice\\s+president\\b",
-      "\\b(iii|iv|v|vi)\\b", "\\bengineer\\s*(-|–)?\\s*[3-9]\\b",
-      "\\bl[5-9]\\b", "\\be[5-9]\\b", "\\blevel\\s*[5-9]\\b",
+      // More senior than target (Staff and above).
+      "\\bstaff\\b", "\\bprincipal\\b", "\\blead\\b",
+      "\\bdistinguished\\b", "\\bfellow\\b", "\\bdirector\\b",
+      "\\bmanager\\b", "\\bhead\\s+of\\b", "\\bvp\\b", "\\bvice\\s+president\\b", "\\bchief\\b",
       // More junior than target.
       "\\bintern\\b", "\\binternship\\b", "\\bapprentice\\b", "\\btrainee\\b",
       "\\bnew\\s+grad\\b", "\\bgraduate\\b", "\\bjunior\\b", "\\bjr\\.?\\b",
-      "\\bentry[-\\s]?level\\b", "\\bsde\\s*(-|–)?\\s*(i|1)\\b", "\\bswe\\s*(-|–)?\\s*(i|1)\\b",
-      "\\bengineer\\s*(-|–)?\\s*(i|1)\\b", "\\bl3\\b",
+      "\\bentry[-\\s]?level\\b", "\\bassociate\\b",
     ],
     exclude: [
-      // Adjacent but not the target role.
-      "\\bsdet\\b", "\\btest\\s+engineer\\b", "\\bqa\\b", "\\bsupport\\s+engineer\\b",
-      // Data engineering is a neighbouring discipline, not this one. Sarthak worked *on* a data
-      // platform at Uber — building the metadata and lineage services — which is backend
-      // distributed-systems work, not pipeline authoring. The titles read as adjacent and the
-      // boards carry a lot of them, so they crowded out real matches. Deliberately in the
-      // discipline list, which a company level-title override can never lift.
-      "\\bdata\\s+engineer(ing)?\\b",
-      // "Quality Assurance Software Developer Engineer in Test" slipped past \bsdet\b in live data.
-      "\\bengineer\\s+in\\s+test\\b", "\\bquality\\s+assurance\\b",
-      "\\bsales\\b", "\\brecruiter\\b", "\\bmarketing\\b", "\\bdesigner\\b",
-      "\\bproduct\\s+manager\\b", "\\bprogram\\s+manager\\b", "\\bproject\\s+manager\\b",
-      "\\btechnical\\s+writer\\b", "\\bsolutions?\\s+engineer\\b", "\\bcustomer\\b",
-      "\\bfield\\s+engineer\\b", "\\bmechanical\\b",
-      // Security and networking. Adjacent to backend work and they match the level patterns
-      // cleanly -- "Product Security Engineer II" and "Cloud Network Engineer II" both scored
-      // as SDE-2 -- but they are a different discipline from Sarthak's Go/Python distributed
-      // systems background, so he does not want them surfaced.
-      "\\bsecurity\\b", "\\bsecops\\b", "\\bsiem\\b", "\\binfosec\\b", "\\bcyber",
-      "\\bcryptograph", "\\bpentest\\b", "\\bpenetration\\s+test", "\\bvulnerability\\b",
-      "\\bthreat\\b", "\\bfirewall\\b", "\\bidentity\\s+and\\s+access\\b",
-      "\\bnetwork(ing|s)?\\b", "\\brouting\\b", "\\bswitching\\b", "\\binfiniband\\b",
-      "\\bwireless\\b", "\\btelecom", "\\bmodem\\b", "\\b5g\\b", "\\bradio\\b",
-      // Silicon and hardware roles. NVIDIA, Qualcomm, Samsung and Dell post these in volume and
-      // they are not backend software work -- "ASIC Verification Engineer", "PCB Design Layout
-      // Engineer", "DFT Methodology Engineer" all surfaced during live validation.
-      "\\bhardware\\b", "\\bfirmware\\b", "\\basic\\b", "\\bpcb\\b", "\\brtl\\b", "\\bdft\\b",
-      "\\bsilicon\\b", "\\banalog\\b", "\\bphysical\\s+design\\b", "\\bsoc\\s+design\\b",
-      "\\bdesign\\s+engineer\\b", "\\blayout\\b", "\\bverification\\s+engineer\\b",
-      "\\bvlsi\\b", "\\bsignal\\s+integrity\\b", "\\bthermal\\b", "\\bmechanical\\b",
+      // Adjacent but different design disciplines.
+      "\\bgraphic\\s+design(er)?\\b", "\\bindustrial\\s+design(er)?\\b", "\\bfashion\\s+design(er)?\\b",
+      "\\binterior\\s+design(er)?\\b", "\\bgame\\s+design(er)?\\b", "\\bset\\s+design(er)?\\b",
+      "\\bweb\\s+design(er)?\\b", "\\bmotion\\s+design(er)?\\b", "\\bcostume\\s+design(er)?\\b",
+      "\\bsound\\s+design(er)?\\b", "\\bprint\\s+design(er)?\\b", "\\bjewelry\\s+design(er)?\\b",
+      "\\bfloral\\s+design(er)?\\b", "\\btextile\\s+design(er)?\\b", "\\bcurriculum\\s+design(er)?\\b",
+      // Research is a neighbouring discipline, not this one.
+      "\\bux\\s+research(er)?\\b", "\\buser\\s+research(er)?\\b", "\\buser\\s+experience\\s+research(er)?\\b",
+      "\\bdesign\\s+research(er)?\\b",
+      // Adjacent product/engineering roles that share vocabulary with "product" or "design".
+      "\\bproduct\\s+manager\\b", "\\bproduct\\s+marketing\\b", "\\bproduct\\s+analyst\\b",
+      "\\bproduct\\s+owner\\b", "\\bdesign\\s+engineer\\b", "\\bdesign\\s+technologist\\b",
+      "\\bdesign\\s+ops\\b", "\\bdesign\\s+operations\\b",
+      "\\bsoftware\\s+engineer\\b", "\\bdeveloper\\b",
+      "\\bsales\\b", "\\brecruiter\\b", "\\bmarketing\\b", "\\bcustomer\\s+success\\b",
+      "\\btechnical\\s+writer\\b", "\\bsolutions?\\s+engineer\\b",
+      "\\barchitect\\b", "\\binterior\\s+architect\\b",
     ],
   },
   experience: {
-    // Sarthak has ~3 years and is eligible for 2-4 year roles.
-    idealMinYears: 2,
-    idealMaxYears: 4,
+    // 3-5 years of product design experience.
+    idealMinYears: 3,
+    idealMaxYears: 5,
     underLevelPenalty: 8,
-    hardRejectYears: 7,
+    hardRejectYears: 8,
     penaltyPerYear: 10,
     unknownPasses: true,
   },
