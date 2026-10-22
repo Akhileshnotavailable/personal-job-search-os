@@ -5,7 +5,7 @@ import { desc, eq } from "drizzle-orm";
 import { Badge, Button, Card, PageHeader, SectionTitle, cx, inputStyles } from "@/components/ui";
 import { getDb } from "@/db";
 import { companies, crawlRuns, type SourceType } from "@/db/schema";
-import { describeConfig } from "@/server/domain/source-detect";
+import { CONFIG_DRIVEN, describeConfig } from "@/server/domain/source-detect";
 import { conflictingContactNumbers, contactsForCompany, listJobs } from "@/server/repository/jobs-repo";
 import {
   acknowledgeSharedNumber,
@@ -145,17 +145,30 @@ export default async function CompanyDetailPage({
             </div>
             <div>
               <label className="block text-[13px] font-medium text-ink">Adapter</label>
-              <select
-                name="sourceType"
-                defaultValue={company.sourceType}
-                className={cx(inputStyles, "mt-1.5")}
-              >
-                {SOURCE_TYPES.map((s) => (
-                  <option key={s} value={s} className="bg-surface-2">
-                    {s}
-                  </option>
-                ))}
-              </select>
+              {/* A select with no option for the stored type silently selects the first one,
+                  so saving this form re-typed a json_api company as greenhouse and erased its
+                  field map. Config-driven sources are shown, not offered. */}
+              {CONFIG_DRIVEN.has(company.sourceType) ? (
+                <>
+                  <input type="hidden" name="sourceType" value={company.sourceType} />
+                  <p className={cx(inputStyles, "mt-1.5 text-ink-dim")}>{company.sourceType}</p>
+                  <p className="mt-1 text-[11px] text-ink-faint">
+                    Field map lives in scripts/company_sources.json
+                  </p>
+                </>
+              ) : (
+                <select
+                  name="sourceType"
+                  defaultValue={company.sourceType}
+                  className={cx(inputStyles, "mt-1.5")}
+                >
+                  {SOURCE_TYPES.map((s) => (
+                    <option key={s} value={s} className="bg-surface-2">
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 

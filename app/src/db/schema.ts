@@ -61,6 +61,10 @@ export type SourceType =
   | "ashby"
   | "smartrecruiters"
   | "workday"
+  // Config-driven adapters: a field map in scripts/company_sources.json, not form fields.
+  | "json_api"
+  | "hydration"
+  | "html_list"
   | "custom_json"
   | "jsonld"
   | "html"

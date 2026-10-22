@@ -107,6 +107,17 @@ export function describeConfig(sourceType: SourceType, config: SourceConfig): st
   }
 }
 
+/**
+ * Sources whose config is a field map -- endpoints, paths, selectors -- kept in
+ * scripts/company_sources.json. The company form has no inputs for them, so it shows the
+ * adapter read-only and never rewrites the config.
+ */
+export const CONFIG_DRIVEN: ReadonlySet<SourceType> = new Set([
+  "json_api",
+  "hydration",
+  "html_list",
+]);
+
 /** Errors that would make a crawl fail, checked before the company is saved. */
 export function validateConfig(sourceType: SourceType, config: SourceConfig): string[] {
   const need = (key: keyof SourceConfig, hint: string) =>

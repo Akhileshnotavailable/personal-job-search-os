@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { companies, contacts, type SourceConfig, type SourceType } from "@/db/schema";
 import type { CompanyMatchOverrides } from "@/server/domain/matching";
-import { detectSource, validateConfig } from "@/server/domain/source-detect";
+import { CONFIG_DRIVEN, detectSource, validateConfig } from "@/server/domain/source-detect";
 
 function revalidateCompany(id?: string) {
   revalidatePath("/companies");
@@ -92,6 +92,25 @@ export async function updateCompany(formData: FormData) {
 
   const sourceType = String(formData.get("sourceType") ?? "manual") as SourceType;
 
+  const details = {
+    name: String(formData.get("name") ?? "").trim(),
+    careersUrl: String(formData.get("careersUrl") ?? "").trim() || null,
+    websiteUrl: String(formData.get("websiteUrl") ?? "").trim() || null,
+    active: formData.get("active") === "on",
+    allowZeroResults: formData.get("allowZeroResults") === "on",
+    matchOverrides: parseLevelTitles(String(formData.get("levelTitles") ?? "")),
+  };
+
+  // The form cannot express these configs, so it must not write one. Before this, saving the
+  // page for any reason -- a level title, the careers link -- rebuilt the config from the
+  // Tier 1-2 inputs, found it empty, and demoted the company to manual with its field map
+  // erased: a working crawl turned into a reminder, silently.
+  if (CONFIG_DRIVEN.has(sourceType)) {
+    await getDb().update(companies).set(details).where(eq(companies.id, id));
+    revalidateCompany(id);
+    return;
+  }
+
   // Config fields are per-source; collect only the ones that apply and drop blanks so an
   // unused key never lingers to confuse the adapter.
   const config: SourceConfig = {};
@@ -108,15 +127,10 @@ export async function updateCompany(formData: FormData) {
   await getDb()
     .update(companies)
     .set({
-      name: String(formData.get("name") ?? "").trim(),
-      careersUrl: String(formData.get("careersUrl") ?? "").trim() || null,
-      websiteUrl: String(formData.get("websiteUrl") ?? "").trim() || null,
+      ...details,
       sourceType: effectiveType,
       sourceTier: effectiveType === "manual" ? 6 : sourceTierFor(effectiveType),
       sourceConfig: config,
-      active: formData.get("active") === "on",
-      allowZeroResults: formData.get("allowZeroResults") === "on",
-      matchOverrides: parseLevelTitles(String(formData.get("levelTitles") ?? "")),
     })
     .where(eq(companies.id, id));
 
