@@ -7,16 +7,27 @@ The organising idea: **the stubborn companies were never individual problems, th
 handful of patterns.** Building for the pattern rather than the company is what turned all but
 one of them into configuration rather than code.
 
-**45 of 49 active companies now crawl automatically.**
+**Every active company now crawls automatically** (2026-10-22). Source configs are kept in
+[`scripts/company_sources.json`](../scripts/company_sources.json) and applied to D1 by
+`scripts/apply_sources.py` — see [October 2026](#october-2026-the-28-that-had-fallen-back-to-manual)
+for why they now live in the repo and not only in the database.
 
-The four that do not:
+Seven of them are read from **Instahyre** because their own board refuses automated access or
+does not exist. That is a narrower view than the company's own board, and it is said plainly
+here rather than counted as full coverage:
 
-| Company | Why not |
-|---|---|
-| **Google** | `robots.txt` disallows `/about/careers/applications/jobs/results`. Worth being precise about *why*, because I twice reached the wrong conclusion here: the rule sits under a `User-agent: Yandex` line, which looks Yandex-specific — but it directly follows `User-agent: *`, and **consecutive user-agent lines form one group**, so the rules apply to both. A standard robots parser says `can_fetch` is false for our UA. Excluded, and not by oversight. |
-| **super.money** | The careers page renders "install the super.money app now", and they have no Instahyre profile (`jobs-at-super-money` 404s). There is no web board anywhere to read. |
-| **Deel** | Careers is marketing, `jobs.deel.com` redirects back into it, the only job-ish link is a template library, and nothing job-shaped loads after accepting consent. |
-| **Eightfold** | Their board is their own product at `app.eightfold.ai`, whose API returns 403 to every client. Unlike Qualcomm, no robots-permitted alternative endpoint exists. |
+| Company | First-party board | Why it is not read directly |
+|---|---|---|
+| Flipkart, Ola | TurboHire | `robots.txt` allows Googlebot only |
+| Zepto, Rapido | Darwinbox | API answers our crawler with Cloudflare "you have been blocked"; `zepto.com` is an AWS WAF challenge |
+| Zomato, Blinkit | none | Eternal publishes no board — its careers page says to find someone to vouch for you, or email hr@eternal.com |
+| BookMyShow | unknown | `in.bookmyshow.com` returns 403 to everything, `robots.txt` included |
+
+KhataBook and OYO are on Instahyre too, with no openings today; their own careers pages are dead
+(KhataBook's times out in a browser, OYO's redirects to the homepage).
+
+LinkedIn job-alert mail (`crawler/linkedin/`) remains the second net for all of these: an alert
+for "Product Designer" at Flipkart or Zepto catches a role that was never posted to Instahyre.
 
 Three former members of this list were promoted once they were investigated properly rather than
 statically scanned — a static regex over the careers HTML found nothing for any of them, and a
@@ -54,6 +65,88 @@ The lesson is the one already recorded below for Qualcomm and Akamai, in a third
 negative result from a static scan is not evidence of absence.** Cohesity's own API answered the
 question by naming its Workday tenant in a field, and PhonePe was one wrong token away the whole
 time.
+
+---
+
+## October 2026: the 28 that had fallen back to manual
+
+When the app was pointed at a new D1 database (commit `9492aa1`), source configs did not come
+with it — they had only ever lived in the old database. Twenty-eight companies showed up as
+"checked by hand", including a dozen that had crawled for weeks. All 28 were re-investigated
+from scratch rather than restored from this document, and that was the right call: several of
+the documented conclusions had gone stale.
+
+| Company | Source now | Jobs at verification |
+|---|---|---|
+| Akamai | DirectEmployers `jobsyn` API, India | 19 |
+| Apple | `html_list`, India search | 189 |
+| DigitalOcean | Greenhouse `digitalocean98` | 183 |
+| Eightfold | Its own pcsx API at `app.eightfold.ai` | 48 |
+| Google | `html_list`, one page only (below) | 2 |
+| Headout | Ashby `headoutinc` | 25 |
+| Hotstar | Workday `jiostar.wd102/JioStar` | 247 |
+| Housing | WordPress REST, `wp/v2/job-listings` | 47 |
+| Intuit | `html_list`, Radancy envelope | 595 |
+| Microsoft | pcsx API, India | 238 |
+| Moveworks | `html_list` (also inside ServiceNow's board) | 74 |
+| Myntra | spire2grow API | 44 |
+| PayPal | pcsx API at `paypal.eightfold.ai`, whole board | 319 |
+| PhonePe | SmartRecruiters `PHONEPELIMITED` | 120 |
+| Postman | Workday `postman.wd108/careers` | 25 |
+| Qualcomm | pcsx API, India | 559 |
+| Rippling | Algolia index | 641 |
+| Uber | Oracle Recruiting Cloud requisition API | 715 |
+| Yellow.ai | Zoho Recruit public `Job_Openings` | 1 |
+| Flipkart, Ola, Zepto, Rapido, Zomato, Blinkit, BookMyShow, KhataBook, OYO | Instahyre, filtered to the employer id | 42, 1, 27, 6, 5, 1, 3, 0, 0 |
+
+What changed, and what each taught:
+
+**Google's `robots.txt` changed.** The full ban on `/about/careers/applications/jobs/results`
+now sits in a group of its own for Yandex. The `User-agent: *` group disallows only the
+paginated results — `?page=` — so the first page of any search, and every job page, is
+permitted. Google is crawled with `singlePage`: one request for UX and Marketing roles matching
+"designer" in India, never a second page. The query is narrow (2 results against a page of 20),
+and if it ever fills the page the crawl fails loudly instead of returning twenty and calling it
+complete. When there are no openings, the page still renders its "Sort by" header, which is what
+tells an empty result apart from a redesigned page.
+
+**Python's `robotparser` is not RFC 9309.** Eightfold, PayPal, Microsoft and Qualcomm share one
+`robots.txt`: `Disallow: /` followed by `Allow: /careers` and `Allow: /api/pcsx`. The standard is
+longest-match, so the Allow wins for those paths. `urllib.robotparser` applies the *first* rule
+that matches, and reports everything disallowed. That is how Eightfold came to be documented as
+uncrawlable while three other boards with the identical file were crawled.
+
+**Unstable sort order skips jobs while every count looks right.** Qualcomm's search sorts by a
+"distance" score that ties across most of the board, and the tie order changes between requests.
+One pass returned 559 rows covering 550 jobs — nine served twice, nine never served. PayPal does
+the same. `json_api` now treats a job repeated within one pass as proof the order moved, and
+re-crawls until the distinct count reaches the reported total (it takes one extra pass). A pass
+that is short *without* repeats is left alone; that is an endpoint stopping early, and
+re-crawling cannot fix it.
+
+**An aggregator's company filter is a text match.** Instahyre's `companies=Housing` returns
+"House of Models" and "Vastu Housing Finance". `recordFilter` keeps only records whose
+`employer.id` is the configured one. Each filtered count was cross-checked against the
+employer's own `jobs_count`, and they agree.
+
+**A name match is not an identity match.** General Catalyst's portfolio board lists a "Zepto" —
+the Australian payments company, linking to `zepto.bamboohr.com`. It would have filed Sydney
+roles under Zepto India.
+
+**Boards move.** Postman left Greenhouse for Workday; its Greenhouse token now returns nothing.
+Hotstar hires as JioStar. Flipkart's careers site links to TurboHire, not Instahyre.
+
+**The edit form was erasing config-driven sources.** The company page's adapter `<select>` had
+no option for `json_api`, `hydration` or `html_list`, so the browser selected the first one,
+`greenhouse`. Saving the page for any reason — a level title, the careers link — submitted
+greenhouse with no board token, failed validation, and wrote the company back as manual with an
+empty config. Those adapters are now shown read-only and their config is never rewritten by
+the form.
+
+Still not crawled directly, by choice: TurboHire (Googlebot-only `robots.txt`), Darwinbox
+(Cloudflare block), `careers.pypl.com` (Cloudflare challenge — the Eightfold board behind it is
+read instead), `jobs.uber.com` pages (intermittent challenge — the Oracle API behind it is read
+instead), and `zepto.com` (AWS WAF).
 
 ---
 
@@ -264,7 +357,7 @@ matches nothing on the first page as a hard error.
 
 ---
 
-## Not crawled (2)
+## Not crawled
 
 **Wint Wealth** — no first-party job board exists. Their site has no careers page (`/careers` is a
 404 and nothing career-shaped appears in their sitemap or homepage), and they hire through
@@ -272,15 +365,10 @@ aggregators: LinkedIn, Instahyre, Wellfound. There is nothing to crawl rather th
 refusing to be crawled, so it is manual with a link to their LinkedIn jobs tab. If they adopt an
 ATS later it becomes a config row like any other.
 
-**Google** — `robots.txt` contains:
-
-```
-Disallow: /about/careers/applications/jobs/results
-```
-
-That is an explicit, machine-readable request not to crawl the job results, and we honour it
-(ADR 008). Unlike the other four, this conclusion was re-verified rather than inherited: the file
-still says it. Google appears on the dashboard as a manual check with a direct link to its board.
+**Google** — *superseded October 2026.* This entry recorded a `robots.txt` that disallowed the
+job results path for every crawler. The file has since changed: that rule now applies to Yandex
+alone, and other crawlers are refused only the paginated results. Google is crawled one page at a
+time — see [October 2026](#october-2026-the-28-that-had-fallen-back-to-manual).
 
 We do not spoof fingerprints, solve challenges, or rotate identities. Beyond being the right call,
 evasion is the *unreliable* one: it breaks constantly and rots silently, which is exactly the
@@ -311,6 +399,11 @@ Before concluding a company cannot be crawled, work through what the last five t
 - **Ask who else the company publishes to.** Job syndication turned the hardest block into an
   ordinary config.
 - **Check which endpoint returned the error.** Atlassian's 401 was real, and irrelevant.
+- **Read `robots.txt` by longest match, not first match.** `urllib.robotparser` reports
+  `Disallow: /` + `Allow: /api/pcsx` as forbidden; RFC 9309 says the Allow wins.
+- **Re-read `robots.txt` before trusting an old verdict.** Google's changed between visits.
+- **On an aggregator, confirm the employer, not the name.** Filter on its id, and check the count
+  against the employer's own profile.
 
 A wrong adapter fails quietly; an honest `manual` shows up as work to do. That asymmetry is why
 detection never guesses.

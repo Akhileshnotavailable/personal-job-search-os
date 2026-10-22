@@ -3,7 +3,7 @@
 The durable state of this project. Updated whenever something meaningful lands, so no context is
 lost between sessions (PRD §73). Picking this up cold: read `CLAUDE.md` first, then this file.
 
-**Last updated:** 2026-09-22
+**Last updated:** 2026-10-22
 
 ---
 
@@ -591,10 +591,47 @@ both still publish. The refusal names the existing page, its path, and the three
 Verified on the live board, and two duplicate pages created by that testing were removed
 afterwards -- exactly the mess the feature exists to prevent.
 
+## The 28 manual companies, crawled again (2026-10-22)
+
+Pointing the app at a new D1 database lost every source config, because configs only ever
+lived in the database; 28 companies fell back to "checked by hand". All 28 were re-investigated
+live and now have sources, recorded in `scripts/company_sources.json` and applied with
+`scripts/apply_sources.py` — so the next database change cannot lose them. Detail and evidence:
+[`source-catalogue.md`](source-catalogue.md#october-2026-the-28-that-had-fallen-back-to-manual).
+
+`python scripts/apply_sources.py check` crawled all 28 through the production adapters with no
+failures, parse errors or repeated ids. Title-gate matches at verification included Apple "UX/UI
+Designer" (Bengaluru), Eightfold "Sr. UX Designer" (Bangalore), Google "UX Designer, YouTube
+Creator Support" (Bengaluru), JioStar "Product Designer - Design Systems" and "Senior Product
+Designer" (Bengaluru), Microsoft "Product Designer -II" (Bangalore) and Zepto "Visual Designer"
+(Bangalore).
+
+Code changes, each with regression tests:
+
+- **`json_api` re-crawls a shuffled board.** Qualcomm and PayPal serve the same job twice across
+  pages and skip others while every count looks right. A repeat within a pass now triggers
+  another pass until the distinct count reaches the reported total.
+- **`json_api` `recordFilter`** keeps an aggregator's records to one employer id — Instahyre's
+  company filter is a fuzzy text match.
+- **`json_api` unescapes titles**, since WordPress serves them entity-encoded.
+- **`html_list` `singlePage`** reads exactly one page and fails if it comes back full — for
+  Google, whose `robots.txt` now forbids only `?page=`.
+- **The company edit form no longer erases config-driven sources.** Its adapter select had no
+  option for `json_api`/`hydration`/`html_list`, so saving re-typed them as greenhouse and the
+  action demoted them to manual with an empty config.
+
+Seven companies (Flipkart, Ola, Zepto, Rapido, Zomato, Blinkit, BookMyShow) are read from
+Instahyre because their own board blocks crawlers or does not exist. That is a subset of their
+openings; LinkedIn alert mail is the second net.
+
 ## Known gaps
 
-- **Google is not crawled**, by choice: its `robots.txt` disallows the job results path. It shows
-  on the dashboard as a manual check.
+- **Seven companies are covered through Instahyre**, not their own boards (TurboHire allows only
+  Googlebot, Darwinbox blocks crawlers, Eternal publishes no board, BookMyShow 403s everything).
+  Roles posted only to the first-party board or LinkedIn reach the app through LinkedIn alert
+  mail or not at all.
+- **Applying sources needs a Cloudflare credential.** `wrangler login` (or a valid
+  `CLOUDFLARE_API_TOKEN`) is required to run the generated SQL against D1.
 
 - **No conditional requests.** `etag` / `last_content_hash` are stored and sent to ingest, but
   adapters do not yet send `If-None-Match`, so nothing short-circuits on a 304.

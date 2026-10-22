@@ -260,3 +260,64 @@ async def test_body_page_is_substituted_as_a_number_not_a_string():
     await JsonApiAdapter().fetch_list(BODY_PAGED_CONFIG, client, CrawlBudget())
     assert client.pages_seen == [0]
     assert isinstance(client.pages_seen[0], int)
+
+
+class ShufflingClient:
+    """A 30-job board served 10 at a time whose order moves between requests, the way
+    Qualcomm's tie-heavy "distance" sort does.
+
+    Each pass is a list of pages. The first repeats job 9 on page 2 and so never serves job 19:
+    30 rows, 29 jobs, and a count that still says 30.
+    """
+
+    def __init__(self, passes: list[list[list[int]]]) -> None:
+        self.passes = passes
+        self.pass_index = -1
+        self.calls = 0
+
+    async def get_json(self, url: str, **kwargs: Any):
+        self.calls += 1
+        start = int(url.split("start=")[1].split("&")[0])
+        if start == 0:
+            self.pass_index += 1
+        pages = self.passes[min(self.pass_index, len(self.passes) - 1)]
+        rows = pages[start // 10] if start // 10 < len(pages) else []
+        positions = [{"displayJobId": f"{300000 + i}", "name": f"Engineer {i}"} for i in rows]
+        return {"data": {"positions": positions, "count": 30}}, None
+
+
+SHUFFLED = [list(range(0, 10)), list(range(9, 19)), list(range(20, 30))]
+STABLE = [list(range(0, 10)), list(range(10, 20)), list(range(20, 30))]
+
+
+@pytest.mark.asyncio
+async def test_a_shuffled_order_is_recrawled_until_every_job_is_seen():
+    client = ShufflingClient([SHUFFLED, STABLE])
+    raws = await JsonApiAdapter().fetch_list(
+        {**CONFIG, "pageSize": 10}, client, CrawlBudget()
+    )
+    ids = [r.data["displayJobId"] for r in raws]
+    assert len(ids) == 30 and len(set(ids)) == 30, "job 19 recovered, job 9 not emitted twice"
+    assert client.calls == 6, "exactly one extra pass"
+
+
+@pytest.mark.asyncio
+async def test_a_short_board_without_repeats_is_not_recrawled():
+    """Fewer rows than the count with no repeats is an endpoint that stopped early, not a
+    shuffle -- another pass would fetch the same thing again."""
+    short = [list(range(0, 10)), list(range(10, 20))]
+    client = ShufflingClient([short])
+    raws = await JsonApiAdapter().fetch_list({**CONFIG, "pageSize": 10}, client, CrawlBudget())
+    assert len(raws) == 20
+    assert client.calls == 3
+
+
+@pytest.mark.asyncio
+async def test_a_board_that_never_settles_is_loud():
+    """Every pass repeats rows and the same third of the board never appears: that is broken
+    pagination, and success would be a silent loss of ten jobs."""
+    broken = [list(range(0, 10)), list(range(0, 10)), list(range(10, 20))]
+    with pytest.raises(SchemaDriftError, match="distinct jobs"):
+        await JsonApiAdapter().fetch_list(
+            {**CONFIG, "pageSize": 10}, ShufflingClient([broken]), CrawlBudget()
+        )

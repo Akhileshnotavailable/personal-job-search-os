@@ -7,6 +7,12 @@ expressible as data, so these become config rows rather than one adapter each (P
 
 Amazon is the first user. Others follow by adding a company row, not a Python file.
 
+Where the endpoint is an aggregator whose company filter is a fuzzy text match, `recordFilter`
+keeps only the records that belong to the configured employer -- Instahyre's `companies=Housing`
+also returns "Vastu Housing Finance", whose jobs would otherwise be filed under Housing:
+
+    "recordFilter": {"path": "employer.id", "equals": 131}
+
     {
       "adapter": "json_api",
       "listUrl": "https://www.amazon.jobs/en/search.json?result_limit={limit}&offset={offset}",
@@ -23,19 +29,26 @@ Amazon is the first user. Others follow by adding a company row, not a Python fi
 
 from __future__ import annotations
 
+import html
 import json
 import re
 from typing import Any
+
+import structlog
 
 from crawler.adapters.base import ConfigError, JobSourceAdapter, SchemaDriftError
 from crawler.http.client import CrawlBudget, HttpClient
 from crawler.models.job import NormalizedJob, RawJob
 from crawler.normalization.dates import parse_date
-from crawler.normalization.fieldmap import map_record, resolve_path
+from crawler.normalization.fieldmap import apply_spec, map_record, resolve_path
 from crawler.normalization.text import html_to_text
+
+log = structlog.get_logger(__name__)
 
 DEFAULT_PAGE_SIZE = 100
 DEFAULT_MAX_PAGES = 40
+# Full passes over a board whose pagination served fewer distinct jobs than it reported.
+MAX_PASSES = 3
 
 REQUIRED_FIELDS = ("external_job_id", "title", "job_url")
 
@@ -57,6 +70,13 @@ class JsonApiAdapter(JobSourceAdapter):
         for required in REQUIRED_FIELDS:
             if required not in fields:
                 errors.append(f"fields.{required} is required")
+        record_filter = config.get("recordFilter")
+        if record_filter is not None and (
+            not isinstance(record_filter, dict)
+            or not record_filter.get("path")
+            or "equals" not in record_filter
+        ):
+            errors.append("recordFilter needs a 'path' and an 'equals' value")
         return errors
 
     async def fetch_list(
@@ -67,15 +87,8 @@ class JsonApiAdapter(JobSourceAdapter):
             raise ConfigError("; ".join(errors))
 
         list_url: str = config["listUrl"]
-        jobs_path: str = config["jobsPath"]
-        total_path: str | None = config.get("totalPath")
-        page_size = int(config.get("pageSize", DEFAULT_PAGE_SIZE))
-        max_pages = int(config.get("maxPages", DEFAULT_MAX_PAGES))
-        # Page numbering is 1-based on some endpoints and 0-based on others; html_list already
-        # calls this startPage, so json_api uses the same word for the same idea.
-        start_page = int(config.get("startPage", 0))
-        method = str(config.get("method", "GET")).upper()
         headers = dict(config.get("headers") or {"Accept": "application/json"})
+        record_filter: dict[str, Any] | None = config.get("recordFilter")
 
         # Some boards issue a per-session CSRF token on the careers page and reject API calls
         # without it. Priming fetches that page first, lifts the token, and sends it as a header.
@@ -106,7 +119,91 @@ class JsonApiAdapter(JobSourceAdapter):
             marker in list_url or marker in _body_text for marker in _pagination_markers
         )
 
+        # Pagination is only as stable as the server's sort order, and some are not stable at
+        # all. Qualcomm's search orders by a "distance" score that ties for most of the board,
+        # and the tie order changes between requests: one pass returned 559 rows covering only
+        # 550 jobs -- nine repeated, so nine others were never served. Nothing failed, and
+        # the count still matched.
+        #
+        # The evidence is a job served twice within one pass: a stable order never repeats a
+        # row, so a repeat proves the order moved -- and whatever it displaced was skipped.
+        # Then another pass is made; each reshuffles the ties, so the union closes the gap in
+        # a pass or two. A pass that is merely short of the total with no repeats is a
+        # different thing (an endpoint that stops early) that re-crawling cannot fix, and it
+        # is left alone. Repeated records are dropped as they arrive -- the same job served
+        # twice within one crawl, not dedup across crawls, which stays at ingest.
+        id_spec = (config.get("fields") or {}).get("external_job_id")
         out: list[RawJob] = []
+        seen: set[str] = set()
+        total: int | None = None
+
+        for attempt in range(1, MAX_PASSES + 1):
+            served, total = await self._one_pass(
+                config, client, budget, headers, paginated
+            )
+            this_pass: set[str] = set()
+            repeated = 0
+            for record, url in served:
+                key = apply_spec(record, id_spec)
+                if key not in (None, ""):
+                    key = str(key)
+                    if key in this_pass:
+                        repeated += 1
+                    this_pass.add(key)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                if record_filter and not _passes(record, record_filter):
+                    continue
+                record["_config"] = config
+                out.append(RawJob(data=record, source_url=url))
+
+            if total is None or not paginated or len(seen) >= total:
+                return out
+            if attempt == 1 and not repeated:
+                return out
+            log.warning(
+                "json_api.unstable_pagination",
+                url=list_url[:120],
+                attempt=attempt,
+                distinct=len(seen),
+                total=total,
+            )
+
+        # Still short after every pass. A job or two going away mid-crawl is ordinary churn;
+        # a large gap means pagination itself is broken, and that must not pass as success.
+        assert total is not None
+        missing = total - len(seen)
+        if missing > max(2, total // 50):
+            raise SchemaDriftError(
+                f"collected {len(seen)} distinct jobs of the {total} reported after "
+                f"{MAX_PASSES} passes; the endpoint's pagination is not returning its board"
+            )
+        log.warning("json_api.short_of_total", url=list_url[:120], missing=missing, total=total)
+        return out
+
+    async def _one_pass(
+        self,
+        config: dict[str, Any],
+        client: HttpClient,
+        budget: CrawlBudget,
+        headers: dict[str, str],
+        paginated: bool,
+    ) -> tuple[list[tuple[Any, str]], int | None]:
+        """Walk every page once. Returns each record with the URL it came from, and the total
+        the endpoint reported (None when it reports none)."""
+        list_url: str = config["listUrl"]
+        jobs_path: str = config["jobsPath"]
+        total_path: str | None = config.get("totalPath")
+        page_size = int(config.get("pageSize", DEFAULT_PAGE_SIZE))
+        max_pages = int(config.get("maxPages", DEFAULT_MAX_PAGES))
+        # Page numbering is 1-based on some endpoints and 0-based on others; html_list already
+        # calls this startPage, so json_api uses the same word for the same idea.
+        start_page = int(config.get("startPage", 0))
+        method = str(config.get("method", "GET")).upper()
+        _body_text = json.dumps(config.get("body") or {})
+
+        served: list[tuple[Any, str]] = []
         offset = 0
         total: int | None = None
 
@@ -150,10 +247,10 @@ class JsonApiAdapter(JobSourceAdapter):
                 raw_total = resolve_path(data, total_path)
                 total = int(raw_total) if isinstance(raw_total, (int, float, str)) and str(raw_total).isdigit() else None
 
-            for record in records:
-                record["_config"] = config
-                out.append(RawJob(data=record, source_url=url))
+            served.extend((record, url) for record in records)
 
+            # Pagination counts every record the server returned, filtered or not: the offset
+            # and the reported total both describe the unfiltered result set.
             offset += len(records)
             if not records or not paginated:
                 break
@@ -184,7 +281,7 @@ class JsonApiAdapter(JobSourceAdapter):
                     f"{-(-total // max(page_size, 1))})."
                 )
 
-        return out
+        return served, total
 
     def parse(self, raw: RawJob) -> NormalizedJob:
         config = raw.data.get("_config") or {}
@@ -199,7 +296,8 @@ class JsonApiAdapter(JobSourceAdapter):
 
         return NormalizedJob(
             external_job_id=str(mapped["external_job_id"]),
-            title=str(mapped["title"]).strip(),
+            # WordPress serves `title.rendered`, entity-encoded: "UX &#038; Product Designer".
+            title=html.unescape(str(mapped["title"])).strip(),
             job_url=str(mapped["job_url"]),
             location=_as_text(mapped.get("location")),
             department=_as_text(mapped.get("department")),
@@ -208,6 +306,12 @@ class JsonApiAdapter(JobSourceAdapter):
             posted_at=parse_date(mapped.get("posted_at")),
             raw_metadata={},
         )
+
+
+def _passes(record: Any, record_filter: dict[str, Any]) -> bool:
+    # Compared as text: the same id arrives as 131 from one endpoint and "131" from another,
+    # and a type mismatch here would drop every record without a word.
+    return str(resolve_path(record, record_filter["path"])) == str(record_filter["equals"])
 
 
 def _as_text(value: Any) -> str | None:

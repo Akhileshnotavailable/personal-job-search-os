@@ -1,0 +1,714 @@
+[
+  {
+    "name": "Akamai",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://akamai.dejobs.org/",
+    "allow_zero_results": false,
+    "note": "akamai.com denies everything; Akamai syndicates every job to DirectEmployers, whose robots.txt allows crawling.",
+    "config": {
+      "listUrl": "https://prod-search-api.jobsyn.org/api/v1/solr/search?location=India&page={page}",
+      "headers": {
+        "Accept": "application/json",
+        "x-origin": "akamai.dejobs.org"
+      },
+      "jobsPath": "jobs",
+      "totalPath": "pagination.total",
+      "pageSize": 10,
+      "startPage": 1,
+      "maxPages": 20,
+      "fields": {
+        "external_job_id": "guid",
+        "title": "title_exact",
+        "job_url": {
+          "template": "https://akamai.dejobs.org/{location_exact|slug}/{title_slug}/{guid}/job/"
+        },
+        "location": "location_exact",
+        "description": "description",
+        "posted_at": "date_new"
+      }
+    }
+  },
+  {
+    "name": "Apple",
+    "source_type": "html_list",
+    "source_tier": 5,
+    "careers_url": "https://jobs.apple.com/en-in/search?location=india-INDC",
+    "allow_zero_results": false,
+    "note": "Server-rendered search, scoped to India. Id is requisition-location, so one role in two cities is two rows.",
+    "config": {
+      "listUrl": "https://jobs.apple.com/en-in/search?location=india-INDC&page={page}",
+      "itemSelector": "div.job-title.job-list-item",
+      "pageSize": 20,
+      "startPage": 1,
+      "maxPages": 30,
+      "fields": {
+        "external_job_id": {
+          "selector": "h3 a",
+          "attr": "href",
+          "pattern": "/details/([^/?#]+)"
+        },
+        "title": {
+          "selector": "h3 a",
+          "text": true
+        },
+        "job_url": {
+          "selector": "h3 a",
+          "attr": "href",
+          "base": "https://jobs.apple.com"
+        },
+        "location": {
+          "selector": ".job-title-location span:not(.a11y)",
+          "text": true
+        },
+        "department": {
+          "selector": "span.team-name",
+          "text": true
+        },
+        "posted_at": {
+          "selector": "span.job-posted-date",
+          "text": true
+        }
+      }
+    }
+  },
+  {
+    "name": "Blinkit",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://www.instahyre.com/jobs-at-blinkit/",
+    "allow_zero_results": false,
+    "note": "Eternal publishes no board (referrals or hr@eternal.com); its Darwinbox tenant blocks crawlers. Instahyre is the only readable listing.",
+    "config": {
+      "listUrl": "https://www.instahyre.com/api/v1/job_search?companies=Blinkit&limit=35&offset={offset}",
+      "jobsPath": "objects",
+      "totalPath": "meta.total_count",
+      "pageSize": 35,
+      "maxPages": 10,
+      "recordFilter": {
+        "path": "employer.id",
+        "equals": 333
+      },
+      "fields": {
+        "external_job_id": "id",
+        "title": "title",
+        "job_url": "public_url",
+        "location": "locations"
+      }
+    }
+  },
+  {
+    "name": "BookMyShow",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://www.instahyre.com/jobs-at-bookmyshow/",
+    "allow_zero_results": false,
+    "note": "in.bookmyshow.com returns 403 to everything, robots.txt included; no ATS found. Instahyre is the only readable listing.",
+    "config": {
+      "listUrl": "https://www.instahyre.com/api/v1/job_search?companies=BookMyShow&limit=35&offset={offset}",
+      "jobsPath": "objects",
+      "totalPath": "meta.total_count",
+      "pageSize": 35,
+      "maxPages": 10,
+      "recordFilter": {
+        "path": "employer.id",
+        "equals": 187
+      },
+      "fields": {
+        "external_job_id": "id",
+        "title": "title",
+        "job_url": "public_url",
+        "location": "locations"
+      }
+    }
+  },
+  {
+    "name": "DigitalOcean",
+    "source_type": "greenhouse",
+    "source_tier": 1,
+    "careers_url": "https://www.digitalocean.com/careers",
+    "allow_zero_results": false,
+    "note": "Greenhouse.",
+    "config": {
+      "boardToken": "digitalocean98"
+    }
+  },
+  {
+    "name": "Eightfold",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://app.eightfold.ai/careers?domain=eightfold.ai",
+    "allow_zero_results": false,
+    "note": "Its own pcsx API. robots.txt allows /api/pcsx (longest match beats Disallow: /).",
+    "config": {
+      "listUrl": "https://app.eightfold.ai/api/pcsx/search?domain=eightfold.ai&query=&start={offset}&num={limit}",
+      "jobsPath": "data.positions",
+      "totalPath": "data.count",
+      "pageSize": 10,
+      "maxPages": 30,
+      "fields": {
+        "external_job_id": "id",
+        "title": "name",
+        "job_url": {
+          "template": "https://app.eightfold.ai/careers/job/{id}?domain=eightfold.ai"
+        },
+        "location": {
+          "path": "locations",
+          "join": "; "
+        },
+        "department": "department",
+        "posted_at": "postedTs"
+      }
+    }
+  },
+  {
+    "name": "Flipkart",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://www.flipkartcareers.com/",
+    "allow_zero_results": false,
+    "note": "First-party board is TurboHire, whose robots.txt allows only Googlebot. Instahyre listing (a subset of Flipkart's openings).",
+    "config": {
+      "listUrl": "https://www.instahyre.com/api/v1/job_search?companies=Flipkart&limit=35&offset={offset}",
+      "jobsPath": "objects",
+      "totalPath": "meta.total_count",
+      "pageSize": 35,
+      "maxPages": 10,
+      "recordFilter": {
+        "path": "employer.id",
+        "equals": 38
+      },
+      "fields": {
+        "external_job_id": "id",
+        "title": "title",
+        "job_url": "public_url",
+        "location": "locations"
+      }
+    }
+  },
+  {
+    "name": "Google",
+    "source_type": "html_list",
+    "source_tier": 5,
+    "careers_url": "https://www.google.com/about/careers/applications/jobs/results?category=USER_EXPERIENCE&category=MARKETING&q=designer&location=India",
+    "allow_zero_results": false,
+    "note": "robots.txt forbids ?page= on results for all crawlers (the full ban is Yandex-only). One page only; a full page fails loudly.",
+    "config": {
+      "listUrl": "https://www.google.com/about/careers/applications/jobs/results?category=USER_EXPERIENCE&category=MARKETING&q=designer&location=India",
+      "singlePage": true,
+      "pageSize": 20,
+      "itemSelector": "li[ssk]",
+      "listContainerSelector": "h3:-soup-contains(\"Sort by\")",
+      "fields": {
+        "external_job_id": {
+          "selector": "a[href*=\"jobs/results/\"]",
+          "attr": "href",
+          "pattern": "results/(\\d+)-"
+        },
+        "title": {
+          "selector": "h3",
+          "text": true
+        },
+        "job_url": {
+          "selector": "a[href*=\"jobs/results/\"]",
+          "attr": "href",
+          "base": "https://www.google.com/about/careers/applications/"
+        },
+        "location": {
+          "selector": "span.r0wTof",
+          "text": true
+        }
+      }
+    }
+  },
+  {
+    "name": "Headout",
+    "source_type": "ashby",
+    "source_tier": 1,
+    "careers_url": "https://jobs.ashbyhq.com/headoutinc",
+    "allow_zero_results": false,
+    "note": "Ashby, under headoutinc rather than the guessable headout.",
+    "config": {
+      "slug": "headoutinc"
+    }
+  },
+  {
+    "name": "Hotstar",
+    "source_type": "workday",
+    "source_tier": 2,
+    "careers_url": "https://jiostar.wd102.myworkdayjobs.com/JioStar",
+    "allow_zero_results": false,
+    "note": "Hotstar hires as JioStar, on Workday.",
+    "config": {
+      "tenant": "jiostar",
+      "dataCenter": "wd102",
+      "site": "JioStar"
+    }
+  },
+  {
+    "name": "Housing",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://careers.housing.com/",
+    "allow_zero_results": false,
+    "note": "WordPress + WP Job Manager; the standard REST route serves every listing.",
+    "config": {
+      "listUrl": "https://careers.housing.com/wp-json/wp/v2/job-listings?per_page={limit}&page={page}",
+      "jobsPath": ".",
+      "pageSize": 100,
+      "startPage": 1,
+      "maxPages": 5,
+      "fields": {
+        "external_job_id": "id",
+        "title": "title.rendered",
+        "job_url": "link",
+        "description": "content.rendered",
+        "posted_at": "date"
+      }
+    }
+  },
+  {
+    "name": "Intuit",
+    "source_type": "html_list",
+    "source_tier": 5,
+    "careers_url": "https://jobs.intuit.com/search-jobs",
+    "allow_zero_results": false,
+    "note": "Radancy/TalentBrew HTML inside a JSON envelope.",
+    "config": {
+      "listUrl": "https://jobs.intuit.com/search-jobs/results?ActiveFacetID=0&CurrentPage={page}&RecordsPerPage={limit}&Distance=50&RadiusUnitType=0&Queries=&Facet=&SearchResultsModuleName=Search+Results&SearchFiltersModuleName=Search+Filters&SortCriteria=0&SortDirection=0&SearchType=5",
+      "htmlPath": "results",
+      "itemSelector": "li[data-intuit-jobid]",
+      "pageSize": 100,
+      "startPage": 1,
+      "maxPages": 20,
+      "fields": {
+        "external_job_id": {
+          "attr": "data-intuit-jobid"
+        },
+        "title": {
+          "selector": "h2",
+          "text": true
+        },
+        "job_url": {
+          "selector": "a",
+          "attr": "href",
+          "base": "https://jobs.intuit.com"
+        },
+        "location": {
+          "selector": "span.job-location",
+          "text": true
+        },
+        "department": {
+          "attr": "data-category"
+        }
+      }
+    }
+  },
+  {
+    "name": "KhataBook",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://khatabook.com/careers/",
+    "allow_zero_results": true,
+    "note": "Careers page times out even in a browser. Instahyre profile exists with no openings, so empty is its normal state.",
+    "config": {
+      "listUrl": "https://www.instahyre.com/api/v1/job_search?companies=Khatabook&limit=35&offset={offset}",
+      "jobsPath": "objects",
+      "totalPath": "meta.total_count",
+      "pageSize": 35,
+      "maxPages": 10,
+      "recordFilter": {
+        "path": "employer.id",
+        "equals": 12268
+      },
+      "fields": {
+        "external_job_id": "id",
+        "title": "title",
+        "job_url": "public_url",
+        "location": "locations"
+      }
+    }
+  },
+  {
+    "name": "Microsoft",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://apply.careers.microsoft.com/careers?domain=microsoft.com&location=India",
+    "allow_zero_results": false,
+    "note": "Eightfold pcsx API, scoped to India; robots.txt allows /api/pcsx. Page size is capped at 10.",
+    "config": {
+      "listUrl": "https://apply.careers.microsoft.com/api/pcsx/search?domain=microsoft.com&query=&location=India&start={offset}&num={limit}",
+      "jobsPath": "data.positions",
+      "totalPath": "data.count",
+      "pageSize": 10,
+      "maxPages": 60,
+      "fields": {
+        "external_job_id": "id",
+        "title": "name",
+        "job_url": {
+          "template": "https://apply.careers.microsoft.com/careers/job/{id}"
+        },
+        "location": {
+          "path": "locations",
+          "join": "; "
+        },
+        "department": "department",
+        "posted_at": "postedTs"
+      }
+    }
+  },
+  {
+    "name": "Moveworks",
+    "source_type": "html_list",
+    "source_tier": 5,
+    "careers_url": "https://www.moveworks.com/us/en/company/careers",
+    "allow_zero_results": false,
+    "note": "Static listing. These roles also appear under ServiceNow's SmartRecruiters board (same sr_id).",
+    "config": {
+      "listUrl": "https://www.moveworks.com/us/en/company/careers",
+      "itemSelector": "div.cmp-job-listings__job[data-location]",
+      "listContainerSelector": "div.cmp-job-listings",
+      "pageSize": 1000,
+      "maxPages": 1,
+      "fields": {
+        "external_job_id": {
+          "selector": "a.cmp-job-listings__job-button",
+          "attr": "href",
+          "pattern": "sr_id=(\\d+)"
+        },
+        "title": {
+          "selector": "h3",
+          "text": true
+        },
+        "job_url": {
+          "selector": "a.cmp-job-listings__job-button",
+          "attr": "href",
+          "base": "https://www.moveworks.com"
+        },
+        "location": {
+          "attr": "data-location"
+        },
+        "department": {
+          "attr": "data-department"
+        }
+      }
+    }
+  },
+  {
+    "name": "Myntra",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://jobs.myntra.com/home",
+    "allow_zero_results": false,
+    "note": "Flutter board backed by spire2grow; needs only the workspaceid header.",
+    "config": {
+      "listUrl": "https://io.spire2grow.com/ies/v1/p/requisition/_search?from={offset}&size={limit}",
+      "headers": {
+        "Accept": "application/json",
+        "workspaceid": "MYNTRA-93as3"
+      },
+      "jobsPath": "entities",
+      "totalPath": "total",
+      "pageSize": 100,
+      "maxPages": 10,
+      "fields": {
+        "external_job_id": "id",
+        "title": "jobTitle",
+        "job_url": {
+          "template": "https://jobs.myntra.com/jobs/{displayId}"
+        },
+        "location": {
+          "path": "jobLocation",
+          "pluck": "fqLocationName",
+          "join": "; "
+        },
+        "department": "departmentName",
+        "posted_at": "jobPosting.startDate"
+      }
+    }
+  },
+  {
+    "name": "Ola",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://www.olacabs.com/careers",
+    "allow_zero_results": false,
+    "note": "First-party board is TurboHire (robots.txt: Googlebot only) and Darwinbox (blocks crawlers). Instahyre listing.",
+    "config": {
+      "listUrl": "https://www.instahyre.com/api/v1/job_search?companies=Ola&limit=35&offset={offset}",
+      "jobsPath": "objects",
+      "totalPath": "meta.total_count",
+      "pageSize": 35,
+      "maxPages": 10,
+      "recordFilter": {
+        "path": "employer.id",
+        "equals": 198
+      },
+      "fields": {
+        "external_job_id": "id",
+        "title": "title",
+        "job_url": "public_url",
+        "location": "locations"
+      }
+    }
+  },
+  {
+    "name": "Oyo",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://www.instahyre.com/jobs-at-oyo-rooms/",
+    "allow_zero_results": true,
+    "note": "/careers redirects to the homepage and no board was found. Instahyre profile with no openings; empty is its normal state.",
+    "config": {
+      "listUrl": "https://www.instahyre.com/api/v1/job_search?companies=OYO%20Rooms&limit=35&offset={offset}",
+      "jobsPath": "objects",
+      "totalPath": "meta.total_count",
+      "pageSize": 35,
+      "maxPages": 10,
+      "recordFilter": {
+        "path": "employer.id",
+        "equals": 353
+      },
+      "fields": {
+        "external_job_id": "id",
+        "title": "title",
+        "job_url": "public_url",
+        "location": "locations"
+      }
+    }
+  },
+  {
+    "name": "PayPal",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://paypal.eightfold.ai/careers?domain=paypal.com",
+    "allow_zero_results": false,
+    "note": "careers.pypl.com is a Cloudflare challenge; the board it fronts is Eightfold, whose robots.txt allows /api/pcsx. Whole board, unfiltered.",
+    "config": {
+      "listUrl": "https://paypal.eightfold.ai/api/pcsx/search?domain=paypal.com&query=&start={offset}&num={limit}",
+      "jobsPath": "data.positions",
+      "totalPath": "data.count",
+      "pageSize": 10,
+      "maxPages": 60,
+      "fields": {
+        "external_job_id": "id",
+        "title": "name",
+        "job_url": {
+          "template": "https://paypal.eightfold.ai/careers/job/{id}?domain=paypal.com"
+        },
+        "location": {
+          "path": "locations",
+          "join": "; "
+        },
+        "department": "department",
+        "posted_at": "postedTs"
+      }
+    }
+  },
+  {
+    "name": "PhonePe",
+    "source_type": "smartrecruiters",
+    "source_tier": 1,
+    "careers_url": "https://jobs.smartrecruiters.com/PHONEPELIMITED",
+    "allow_zero_results": false,
+    "note": "SmartRecruiters under PHONEPELIMITED.",
+    "config": {
+      "companyId": "PHONEPELIMITED"
+    }
+  },
+  {
+    "name": "Postman",
+    "source_type": "workday",
+    "source_tier": 2,
+    "careers_url": "https://postman.wd108.myworkdayjobs.com/careers",
+    "allow_zero_results": false,
+    "note": "Moved from Greenhouse to Workday; the old Greenhouse board is gone.",
+    "config": {
+      "tenant": "postman",
+      "dataCenter": "wd108",
+      "site": "careers"
+    }
+  },
+  {
+    "name": "Qualcomm",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://careers.qualcomm.com/careers?domain=qualcomm.com&location=India",
+    "allow_zero_results": false,
+    "note": "Eightfold pcsx API, scoped to India. Its sort order shuffles between pages; json_api re-passes until complete.",
+    "config": {
+      "listUrl": "https://careers.qualcomm.com/api/pcsx/search?domain=qualcomm.com&query=&location=India&start={offset}&num={limit}",
+      "jobsPath": "data.positions",
+      "totalPath": "data.count",
+      "pageSize": 10,
+      "maxPages": 90,
+      "fields": {
+        "external_job_id": "id",
+        "title": "name",
+        "job_url": {
+          "template": "https://careers.qualcomm.com/careers/job/{id}"
+        },
+        "location": {
+          "path": "locations",
+          "join": "; "
+        },
+        "department": "department",
+        "posted_at": "postedTs"
+      }
+    }
+  },
+  {
+    "name": "Rapido",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://rapido.bike/Careers",
+    "allow_zero_results": false,
+    "note": "First-party board is Darwinbox, which blocks crawlers (and is currently empty). Instahyre listing.",
+    "config": {
+      "listUrl": "https://www.instahyre.com/api/v1/job_search?companies=Rapido&limit=35&offset={offset}",
+      "jobsPath": "objects",
+      "totalPath": "meta.total_count",
+      "pageSize": 35,
+      "maxPages": 10,
+      "recordFilter": {
+        "path": "employer.id",
+        "equals": 887
+      },
+      "fields": {
+        "external_job_id": "id",
+        "title": "title",
+        "job_url": "public_url",
+        "location": "locations"
+      }
+    }
+  },
+  {
+    "name": "Rippling",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://www.rippling.com/careers/open-roles",
+    "allow_zero_results": false,
+    "note": "Hosted Algolia index with the public search-only key every visitor's browser uses; robots.txt forbids rippling.com/api, not algolia.net.",
+    "config": {
+      "listUrl": "https://6FNAX3TBEF-dsn.algolia.net/1/indexes/careers_en-US_production/query",
+      "method": "POST",
+      "headers": {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "X-Algolia-Application-Id": "6FNAX3TBEF",
+        "X-Algolia-API-Key": "416caa4690f002ff6fe4a2097623640b"
+      },
+      "body": {
+        "hitsPerPage": "{limit}",
+        "page": "{page}"
+      },
+      "jobsPath": "hits",
+      "totalPath": "nbHits",
+      "pageSize": 100,
+      "maxPages": 15,
+      "fields": {
+        "external_job_id": "objectID",
+        "title": "name",
+        "job_url": "url",
+        "location": {
+          "template": "{locations.0.name}, {locations.0.country}"
+        },
+        "department": "departmentName"
+      }
+    }
+  },
+  {
+    "name": "Uber",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://jobs.uber.com/en/jobs/",
+    "allow_zero_results": false,
+    "note": "jobs.uber.com challenges crawlers; its data comes from Oracle Recruiting Cloud's public requisition API, which has no robots.txt restriction.",
+    "config": {
+      "listUrl": "https://iaziqy.fa.ocs.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber=UberCareers,limit={limit},offset={offset},sortBy=POSTING_DATES_DESC",
+      "jobsPath": "items.0.requisitionList",
+      "totalPath": "items.0.TotalJobsCount",
+      "pageSize": 100,
+      "maxPages": 20,
+      "fields": {
+        "external_job_id": "Id",
+        "title": "Title",
+        "job_url": {
+          "template": "https://jobs.uber.com/en/jobs/{Id}/"
+        },
+        "location": "PrimaryLocation",
+        "posted_at": "PostedDate"
+      }
+    }
+  },
+  {
+    "name": "Yellow.ai",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://yellow.ai/career/",
+    "allow_zero_results": false,
+    "note": "Zoho Recruit public Job_Openings API, the one its embedded widget reads.",
+    "config": {
+      "listUrl": "https://careers.yellow.ai/recruit/v2/public/Job_Openings?pagename=Careers&source=CareerSite",
+      "jobsPath": "data",
+      "fields": {
+        "external_job_id": "id",
+        "title": "Posting_Title",
+        "job_url": "$url",
+        "location": {
+          "template": "{City}, {State}, {Country}"
+        }
+      }
+    }
+  },
+  {
+    "name": "Zepto",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://zepto.darwinbox.in/ms/candidate/careers",
+    "allow_zero_results": false,
+    "note": "First-party board is Darwinbox, which blocks crawlers; zepto.com is an AWS WAF challenge. Instahyre listing.",
+    "config": {
+      "listUrl": "https://www.instahyre.com/api/v1/job_search?companies=Zepto&limit=35&offset={offset}",
+      "jobsPath": "objects",
+      "totalPath": "meta.total_count",
+      "pageSize": 35,
+      "maxPages": 10,
+      "recordFilter": {
+        "path": "employer.id",
+        "equals": 34141
+      },
+      "fields": {
+        "external_job_id": "id",
+        "title": "title",
+        "job_url": "public_url",
+        "location": "locations"
+      }
+    }
+  },
+  {
+    "name": "Zomato",
+    "source_type": "json_api",
+    "source_tier": 3,
+    "careers_url": "https://www.instahyre.com/jobs-at-zomato/",
+    "allow_zero_results": false,
+    "note": "Eternal publishes no board (referrals or hr@eternal.com); its Darwinbox tenant blocks crawlers. Instahyre listing.",
+    "config": {
+      "listUrl": "https://www.instahyre.com/api/v1/job_search?companies=Zomato&limit=35&offset={offset}",
+      "jobsPath": "objects",
+      "totalPath": "meta.total_count",
+      "pageSize": 35,
+      "maxPages": 10,
+      "recordFilter": {
+        "path": "employer.id",
+        "equals": 27
+      },
+      "fields": {
+        "external_job_id": "id",
+        "title": "title",
+        "job_url": "public_url",
+        "location": "locations"
+      }
+    }
+  }
+]

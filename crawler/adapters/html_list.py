@@ -20,6 +20,12 @@ of the zero-result guard, enforced one layer earlier.
         "job_url": {"selector": "a", "attr": "href", "base": "https://jobs.intuit.com"}
       }
     }
+
+`singlePage` is for a source whose robots.txt forbids pagination but permits the first page --
+Google disallows `?page=` on its results and nothing else. Exactly one page is fetched, so the
+query must be narrow enough to fit on it, and a page that comes back full is an error: the jobs
+after it exist and cannot be read, and returning the first twenty as a success would be silent
+truncation.
 """
 
 from __future__ import annotations
@@ -71,10 +77,11 @@ class HtmlListAdapter(JobSourceAdapter):
         page_size = int(config.get("pageSize", 100))
         start_page = int(config.get("startPage", 1))
         max_pages = int(config.get("maxPages", DEFAULT_MAX_PAGES))
+        single_page = bool(config.get("singlePage"))
         selector = config["itemSelector"]
 
         out: list[RawJob] = []
-        for page_index in range(max_pages):
+        for page_index in range(1 if single_page else max_pages):
             page = start_page + page_index
             url = config["listUrl"].format(
                 page=page, offset=page_index * page_size, limit=page_size
@@ -128,6 +135,13 @@ class HtmlListAdapter(JobSourceAdapter):
                 )
             if not items:
                 break
+
+            if single_page and len(items) >= page_size:
+                raise SchemaDriftError(
+                    f"the only permitted page came back full ({len(items)} of pageSize "
+                    f"{page_size}), so jobs beyond it are being missed. Narrow the query in "
+                    "listUrl until it fits on one page; this source may not be paginated."
+                )
 
             for item in items:
                 out.append(
